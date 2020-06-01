@@ -1,0 +1,75 @@
+version: 2.1
+description: Upload a new build to TestFairy.
+
+commands:
+  uploader:
+    parameters:
+      file:
+        description: APK or IPA file data.
+        type: string
+      api-key:
+        description: Your API application key. See https://app.testfairy.com/settings for details.
+        type: string
+      symbols-file:
+        description: Symbols mapping file. For iOS this should be a path to the zipped symbols file. For Android, this is the path to the mappings.txt file
+        type: string
+        default: ""
+      testers-groups:
+        description: Either a comma-separated list of tester groups to be invited on the new build, or "all" to invite all testers.
+        type: string
+        default: ""
+      notify:
+        description: Send email to all users in tester_groups. The default is "on".
+        type: enum
+        enum: ["on", "off"]
+        default: "on"
+      auto-update:
+        description: Allows an easy upgrade of all users to the current version. The default is "off", to enable set as "on".
+        type: enum
+        enum: ["on", "off"]
+        default: "off"
+      tags:
+        description: Set of comma-separated tags to be displayed and search upon.
+        type: string
+        default: ""
+      server-endpoint:
+        description: API URL for TestFairy. The default is https://upload.testfairy.com
+        type: string
+        default: https://upload.testfairy.com
+      changelog:
+        description: Changelog for this upload.
+        type: string
+        default: ""
+    steps:
+      - run:
+          name: Uploading app to TestFairy
+          command: |
+            CHANGELOG="<< parameters.changelog >>"
+            if [ -z "${CHANGELOG}" ]; then
+                CHANGELOG=$(git log --format=oneline -n 1 $CIRCLE_SHA1)
+            fi
+
+            SYMBOLS="<< parameters.symbols-file >>"
+            if [ ! -z "${SYMBOLS}" ]; then
+                SYMBOLS="@${SYMBOLS}"
+            fi
+
+            JSON=$( curl -s << parameters.server-endpoint >>/api/upload/ \
+              -F api_key="<< parameters.api-key >>" \
+              -F file="@<< parameters.file >>" \
+              -F symbols_file="${SYMBOLS}" \
+              -F auto-update="<< parameters.auto-update >>" \
+              -F notify="<< parameters.notify >>" \
+              -F testers-groups="<< parameters.testers-groups >>" \
+              -F tags="<< parameters.tags >>" \
+              -F changelog="<< parameters.changelog >>" \
+              -A "TestFairy CircleCI Uploader" )
+
+            URL=$( echo ${JSON} | sed 's/\\\//\//g' | sed -n 's/.*"build_url"\s*:\s*"\([^"]*\)".*/\1/p' )
+            if [ -z "$URL" ]; then
+              echo "Upload failed ${JSON}"
+              exit 1
+            fi
+
+            echo "Build was successfully uploaded to TestFairy and is available at:"
+            echo ${URL}
