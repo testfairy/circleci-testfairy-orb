@@ -62,7 +62,7 @@ commands:
               -F notify="<< parameters.notify >>" \
               -F testers-groups="<< parameters.testers-groups >>" \
               -F tags="<< parameters.tags >>" \
-              -F changelog="<< parameters.changelog >>" \
+              -F changelog="${CHANGELOG}" \
               -A "TestFairy CircleCI Uploader" )
 
             URL=$( echo ${JSON} | sed 's/\\\//\//g' | sed -n 's/.*"build_url"\s*:\s*"\([^"]*\)".*/\1/p' )
