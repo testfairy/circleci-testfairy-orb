@@ -1,6 +1,10 @@
 version: 2.1
 description: Upload a new build to TestFairy.
 
+dispaly:
+  home_url: https://www.testfairy.com/
+  source_url: https://github.com/testfairy/circleci-testfairy-orb
+
 commands:
   uploader:
     parameters:
@@ -8,8 +12,8 @@ commands:
         description: APK or IPA file data.
         type: string
       api-key:
-        description: Your API application key. See https://app.testfairy.com/settings for details.
-        type: string
+        description: The envrionment variable name containing your API application key. See https://app.testfairy.com/settings for details.
+        type: env_var_name
       symbols-file:
         description: Symbols mapping file. For iOS this should be a path to the zipped symbols file. For Android, this is the path to the mappings.txt file
         type: string
@@ -55,7 +59,7 @@ commands:
             fi
 
             JSON=$( curl -s << parameters.server-endpoint >>/api/upload/ \
-              -F api_key="<< parameters.api-key >>" \
+              -F api_key="$<< parameters.api-key >>" \
               -F file="@<< parameters.file >>" \
               -F symbols_file="${SYMBOLS}" \
               -F auto-update="<< parameters.auto-update >>" \
