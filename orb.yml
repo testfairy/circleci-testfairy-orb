@@ -1,7 +1,7 @@
 version: 2.1
 description: Upload a new build to TestFairy.
 
-dispaly:
+display:
   home_url: https://www.testfairy.com/
   source_url: https://github.com/testfairy/circleci-testfairy-orb
 
